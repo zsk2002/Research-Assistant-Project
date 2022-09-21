@@ -1,0 +1,334 @@
+---
+title: "Data clean"
+author: "Shangkai Zhu"
+date: "6/13/2022"
+output: pdf_document
+---
+
+```{r}
+# Get the data in the google doc
+library(readxl)
+library(tidyverse)
+# Load the Economic noConference Dataset
+data <- read_excel("Economic noConference Data.xlsx")
+```
+
+
+
+```{r}
+# Data clean for Economic noConference Dataset
+# pick the columns for speakers 
+colnames(data)
+name <- data %>% 
+  select(Association_Name, Speaker_2022, Speaker_2021, Speaker_2020, Speaker_2019, Speaker_2018, Speaker_2017, Speaker_2016, Speaker_2015, Speaker_2014)
+
+# Make the name dataset long and have a year column
+name <- name %>% 
+  pivot_longer(c(Speaker_2022, Speaker_2021, Speaker_2020, Speaker_2019, Speaker_2018, Speaker_2017, Speaker_2016, Speaker_2015, Speaker_2014),  values_to = "Name") 
+name <- rename(name, Year = name) # rename speaker_year to Year
+name$Year <- str_replace_all(name$Year, 
+                             c("Speaker_2022" = "2022", 
+                               "Speaker_2021" = "2021", 
+                               "Speaker_2020" = "2020", 
+                               "Speaker_2019" = "2019", 
+                               "Speaker_2018" = "2018", 
+                               "Speaker_2017" = "2017", 
+                               "Speaker_2016" = "2016", 
+                               "Speaker_2015" = "2015", 
+                               "Speaker_2014" = "2014")) # replace "Speaker_2022" with "2022"
+name<-na.omit(name) # remove the NAs
+```
+
+```{r}
+# get name and sex for different years
+sex_2022<- data[, c(1, 6:7)]
+sex_2022 <- rename(sex_2022, Name = Speaker_2022, Sex = Sex_2022) %>% na.omit()
+sex_2021<- data[, c(1, 8:9)] %>% na.omit()
+sex_2021 <- rename(sex_2021, Name = Speaker_2021, Sex = Sex_2021)
+sex_2020<- data[, c(1, 10:11)] %>% na.omit()
+sex_2020 <- rename(sex_2020, Name = Speaker_2020, Sex = Sex_2020)
+sex_2019<- data[, c(1, 12:13)] %>% na.omit()
+sex_2019 <- rename(sex_2019, Name = Speaker_2019, Sex = Sex_2019)
+sex_2018<- data[, c(1, 14:15)] %>% na.omit()
+sex_2018 <- rename(sex_2018, Name = Speaker_2018, Sex = Sex_2018)
+sex_2017<- data[, c(1, 16:17)] %>% na.omit();
+sex_2017 <- rename(sex_2017, Name = Speaker_2017, Sex = Sex_2017)
+sex_2016<- data[, c(1, 18:19)] %>% na.omit()
+sex_2016 <- rename(sex_2016, Name = Speaker_2016, Sex = Sex_2016)
+sex_2015<- data[, c(1, 20:21)] %>% na.omit()
+sex_2015 <- rename(sex_2015, Name = Speaker_2015, Sex = Sex_2015)
+sex_2014<- data[, c(1, 22:23)] %>% na.omit()
+sex_2014 <- rename(sex_2014, Name = Speaker_2014, Sex = Sex_2014)
+
+# reconstruct the date to join name and sex
+all_sex <- rbind(sex_2022, sex_2021, sex_2020, sex_2019, sex_2018, sex_2017, sex_2016, sex_2015, sex_2014)
+
+
+final <- left_join(name, all_sex, by = c("Association_Name", "Name")) # join name and sex
+
+```
+
+```{r}
+# Fix all the "?"
+which(final$Sex == "?")
+final[3744, 3] = "Volker W. Wieland"
+final[3744, 4] = "M"
+final[4326, 4] = "F"
+final[4447, 3] = "Honglin Wang"
+final[4447, 4] = "M"
+final[6893, 3] = "Bandi Kamaiah"
+final[6893, 4] = "M"
+final[6905, 4] = "M"
+final[89, 4] = "M"
+final[3885, 4] = "M"
+final[177, 4] = "F"
+
+# clean NA
+final[2158, 4]= "M"
+final[2162, 4] = "M"
+final[5194, 4] = "M"
+final[6390, 4] = "M"
+final[6390, 3] = "Amartya K. Sen"
+final[6610, 4] = "M"
+final[6610, 3] = "Amartya K. Sen"
+final[6977, 4] = "M"
+final[6981, 4] = "M"
+final <- final[-c(440, 508, 653, 656, 937, 1337, 1396, 1657, 1703, 2615), ]
+
+```
+
+
+```{r}
+# Split Name into FirstName and Last Name Manually
+separated_name <- cleaned_final %>% separate(Name,c("First_Name","Last_Name"),sep=" (?=[^ ]*$)")
+cleaned_final[95, 3]
+separated_name[95, 3] = "Alan"
+separated_name[95, 4] = "Manning"
+cleaned_final[320, 3]
+separated_name[320, 3] = "Andrew"
+separated_name[320, 4] = "Lo"
+cleaned_final[1217, 3]
+separated_name[1217, 3] = "Dave"
+separated_name[1217, 4] = "Donaldson"
+cleaned_final[1616, 3]
+separated_name[1616, 3] = "Enrico"
+separated_name[1616, 4] = "Moretti"
+cleaned_final[4084, 3]
+separated_name[4084, 3] = "Mushfiq"
+separated_name[4084, 4] = "Mobarak"
+cleaned_final[5031, 3]
+separated_name[5031, 3] = "Rosa"
+separated_name[5031, 4] = "Matzkin"
+cleaned_final[5272, 3] = "Shouyang Wang"
+separated_name[5272, 3] = "Shouyang"
+separated_name[5272, 4] = "Wang"
+```
+
+
+
+```{r}
+# combine Last_Name and First_Name in the separted_name dataset
+cleaned_name <- separated_name %>% 
+  mutate(name = paste(Last_Name, First_Name, sep = ", "))
+```
+
+
+
+```{r}
+# output cleaned name dataset
+library("writexl")
+write_xlsx(cleaned_name,"cleaned_name.xlsx")
+```
+
+
+
+```{r}
+# read the Given dataset with author scopus id already
+library(readr)
+original_cleaned_dataset <- read_csv("original_cleaned_dataset.csv")
+
+```
+
+```{r}
+# join cleaned name with original_cleaned_dataset 
+matched <- left_join(cleaned_name, original_cleaned_dataset, by = "name") 
+```
+
+
+```{r}
+# # filter the authors without scopus id and select Last_name and First Name
+non_identifier_name <- matched %>% 
+    filter(is.na(identifier)) %>% 
+  select(Last_Name, First_Name)
+
+# author with no scopus author id
+non_identifier_name <- unique(non_identifier_name)
+# output non_matched_speaker_name 
+# write_xlsx(non_identifier_name,"non_matched_speaker_name.xlsx")
+
+# read manually cleaned non_matched_speaker, with bracket removed
+non_identifier_name_manually_cleaned <- read_excel("non_matched_speaker_name.xlsx")
+non_identifier_name_manually_cleaned <- unique(non_identifier_name_manually_cleaned) 
+# clear the duplicate rows and output non_matched_speaker_name
+# write_xlsx(non_identifier_name_manually_cleaned,"non_matched_speaker_name.xlsx") 
+```
+
+
+```{r}
+# Deal with authorID for non_matched_speaker_name
+# read first 3000 author with author id
+unique_name_0_3000 <-  read_excel("output_0-3000_unique.xlsx")
+name_3000_rest <-  read_excel("output_3000_rest_unique.xlsx")
+# Combine the two dataset
+all_name <- rbind(unique_name_0_3000, name_3000_rest)
+# output the Dataset as all_name.xlsx
+# write_xlsx(all_name, "all_name.xlsx")
+
+
+# Become useless after we manually checked speakers' ID
+# 0-3000
+# Get unique name with count == 0
+index <- c(which(unique_name_0_3000$Count == "1")) # get all the index with count == 1
+not_unique_zero_index <- vector(length = length(index)) 
+for (i in 1:length(index)){
+  not_unique_zero_index[i] <- as.integer(index[i]) - 1
+} # Loop through all the index with count == 1, -1 will let us find the author's with count 0 but not unique
+unique_zero_0_3000<- unique_name_0_3000[-not_unique_zero_index,] # remove not unique authors with count == 0
+all_unique_0_3000 <- unique_zero_0_3000 %>% 
+  filter(Count == 0) %>% 
+  dplyr::select(eid, surname, givenname) # get all unique authors with count == 0
+id <- c(str_replace_all(all_unique_0_3000$eid, "9-s2.0-", "")) # reformat the eid to get rid of the prefix
+
+all_unique_0_3000 <- cbind(all_unique_0_3000, id) # combine id with the dataset
+
+all_unique_0_3000 <- all_unique_0_3000 %>% 
+  rename("Scopus identifier" = id, "Last_Name" = surname, "First_Name" = givenname ) %>% 
+  dplyr::select(`Scopus identifier`,Last_Name, First_Name ) # get columns "Scopus identifier", "Last_Name"
+# "First_Name"
+
+# rest_3000
+# Get unique name with count == 0
+# read the rest authors with author id
+name_3000_rest <-  read_excel("output_3000_rest_unique.xlsx")
+unique_name_3000_rest <- unique(name_3000_rest)  # unique
+index <- c(which(unique_name_3000_rest$Count == "1")) # get all the index with count == 1
+not_unique_zero_index <- vector(length = length(index))
+for (i in 1:length(index)){
+  not_unique_zero_index[i] <- as.integer(index[i]) - 1
+}# Loop through all the index with count == 1, -1 will let us find the author's with count 0 but not unique
+
+unique_zero_3000_rest<- unique_name_3000_rest[-not_unique_zero_index,] # remove not unique authors with count == 0
+all_unique_3000_rest <- unique_zero_3000_rest %>% 
+  filter(Count == 0) %>% 
+  dplyr::select(eid, surname, givenname) # get all unique authors with count == 0
+
+id <- c(str_replace_all(all_unique_3000_rest$eid, "9-s2.0-", "")) # reformat the eid to get rid of the prefix
+
+all_unique_3000_rest <- cbind(all_unique_3000_rest, id) # combine the dataset
+
+all_unique_3000_rest <- all_unique_3000_rest %>% 
+  rename("Scopus identifier" = id, "Last_Name" = surname, "First_Name" = givenname ) %>% 
+  dplyr::select(`Scopus identifier`,Last_Name, First_Name ) # get columns "Scopus identifier", "Last_Name"
+# "First_Name"
+
+# ALL unique author's scopus id 
+author_id<- rbind(all_unique_0_3000, all_unique_3000_rest)
+author_id <- unique(all_unique)
+
+write_xlsx(author_id, "author_id_for_non_matched_speakers.xlsx")
+
+```
+
+
+
+```{r}
+# Split authors with years
+scopus_id_year <- function(dataset_id_name, dataset_year, year){
+  result <- dataset_year %>% 
+  left_join(dataset_id_name, by = c("Last_Name", "First_Name")) %>% 
+  filter(Year == year) %>% 
+  na.omit() %>% 
+  dplyr::select(`Scopus identifier`,Last_Name, First_Name)
+  result <- unique(result)
+  return (result)}
+```
+
+```{r}
+# read manually checked non matched speakers
+non_matched_all_author_id <- read_excel("Speaker_info.xlsx")
+non_matched_all_author_id$Correct <- as.integer(non_matched_all_author_id$Correct)
+non_matched_all_author_id <- non_matched_all_author_id %>% 
+  filter(Correct == "1"| Unique == "1")
+speakers <- non_matched_all_author_id
+
+# remove the prefix in the cid
+id <- c(str_replace_all(non_matched_all_author_id$eid, "9-s2.0-", ""))
+non_matched_all_author_id <- cbind(non_matched_all_author_id, id)
+
+# rename and select "Scopus identifier", "Last_Name", and "First_Name"
+non_matched_all_author_id <- non_matched_all_author_id %>% 
+  rename("Scopus identifier" = id, "Last_Name" = surname, "First_Name" = givenname ) %>% 
+  dplyr::select(`Scopus identifier`,Last_Name, First_Name )
+
+# get rid of the duplicate rows
+unique_non_matched_all_author_id <- unique(non_matched_all_author_id)
+
+# read matched speaker's cid  (csv file, previously finished)
+original_cleaned_dataset <- read_csv("original_cleaned_dataset.csv")
+
+# original clean dataset split the name
+original_cleaned_dataset <- unique(original_cleaned_dataset)
+original_cleaned_dataset_name_split <- original_cleaned_dataset %>% 
+  separate(name,c("Last_Name","First_Name"),sep=" (?=[^,]*$)") %>% 
+  rename("Scopus identifier" = identifier)
+original_cleaned_dataset_name_split$Last_Name <- substr(original_cleaned_dataset_name_split$Last_Name, 1, nchar(original_cleaned_dataset_name_split$Last_Name) - 1)
+
+
+# combine matched and non matched speaker
+all_speaker_id <- rbind(unique_non_matched_all_author_id, original_cleaned_dataset_name_split)
+
+cleaned_name <- read_excel("cleaned_name.xlsx")
+```
+
+
+```{r}
+# Seperate the speakers with years
+author_2022 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2022), "2022_unique_scopus_id.xlsx")
+author_2021 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2021), "2021_unique_scopus_id.xlsx")
+author_2020 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2020), "2020_unique_scopus_id.xlsx")
+author_2019 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2019), "2019_unique_scopus_id.xlsx")
+author_2018 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2018), "2018_unique_scopus_id.xlsx")
+author_2017 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2017), "2017_unique_scopus_id.xlsx")
+author_2016 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2016), "2016_unique_scopus_id.xlsx")
+author_2015 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2015), "2015_unique_scopus_id.xlsx")
+author_2014 <- write_xlsx(scopus_id_year(all_speaker_id, cleaned_name, 2014), "2014_unique_scopus_id.xlsx")
+```
+
+
+
+
+
+
+
+```{r}
+# Become useless after we decided to have h_index
+all_2022 <- read_excel("2022_author_citation.xlsx")
+all_2021 <- read_excel("2021_author_citation.xlsx")
+all_2020 <- read_excel("2020_author_citation.xlsx")
+all_2019 <- read_excel("2019_author_citation.xlsx")
+all_2018 <- read_excel("2018_author_citation.xlsx")
+all_2017 <- read_excel("2017_author_citation.xlsx")
+all_2016 <- read_excel("2016_author_citation.xlsx")
+all_2015 <- read_excel("2015_author_citation.xlsx")
+all_2014 <- read_excel("2014_author_citation.xlsx")
+
+all_citation <- rbind(all_2022, all_2021, all_2020, all_2019, all_2018, all_2017, all_2016, all_2015, all_2014)
+write_xlsx(all_citation, "scopus_id_citation_name.xlsx")
+```
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+Google Sheets: https://docs.google.com/spreadsheets/d/1TsSg0M2gA2__qilco0W13CbuERPLsuWKNnuhnTnc1XU/edit?usp=sharing
+
+There are two sheets in this document: (1) Associations list, which is a list of ~900 associations, with hyperlinks to their pages, and (2) Gender in conference speakers, data already collected for most or all of the conferences.
+Using (1), we want to visit the website of an association, and for each year that an association has a conference, we want to find the names of any invited speakers and add them to (2). For e.g., if the AEA has John Doe as an invited speaker in 2022, you would input this in the spreadsheet for row AEA, column Speaker_2022. The Talk column in (2) lists the different ways an invited speaker may be described. For each entry you work on, add your name to the end of that row in (2). (If multiple people work on the same row, append your name in the same cell and mention the year(s) you worked on.)
+
+Coding guide:
